@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import os
+from flask import send_file
 
 app = Flask(__name__)
-
 
 STUDENTS_FILE = "students.xlsx"
 REDEMPTIONS_FILE = "redemptions.xlsx"
@@ -101,5 +101,17 @@ def redeem():
 
     return jsonify({"success": True, "remaining": remaining})
 
+@app.route("/download/redemptions")
+def download_redemptions():
+    """
+    Send the redemptions.xlsx file to the browser as a download.
+    """
+    try:
+        return send_file("redemptions.xlsx", as_attachment=True)
+    except Exception as e:
+        return f"Error downloading file: {e}"
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
+    
