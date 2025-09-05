@@ -545,6 +545,24 @@ function redeemPrizes(){
     z-index: 1000;
     animation: sparkle 1s ease-in-out;
   }
+
+  .download-btn {
+    background: #ffd700; /* gold */
+    color: #8b0000;      /* maroon text */
+    padding: 10px 20px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: bold;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    transition: 0.2s;
+}
+
+.download-btn:hover {
+    background: #ffc107;
+    color: #4b0000;
+    transform: translateY(-2px);
+}
+
 </style>
 <body>
 <header>
@@ -576,6 +594,10 @@ function redeemPrizes(){
     <button onclick="redeemPrizes()">Redeem</button>
   </div>
   <p id="message"></p>
+  <div style="margin:20px 0; text-align:center;">
+    <a href="/download/redemptions" class="download-btn">📥 Download Redemption Data</a>
+</div>
+
 </div>
 <script>
 let currentStudent = "";
