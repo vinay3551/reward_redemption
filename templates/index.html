@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>iTeach PDU - Pcoin Aution</title>
+<style>
+  body { font-family: 'Arial', sans-serif; background: linear-gradient(to bottom, #fff8dc, #8b0000); color: #4b0000; margin:0; padding:0; }
+  header { text-align:center; padding:40px 20px 20px 20px; background-color:#8b0000; color:gold; box-shadow:0 4px 8px rgba(0,0,0,0.2); }
+  header h1{margin:0;font-size:3em;font-weight:bold;} header p{font-size:1.5em;font-style:italic;opacity:0.7;}
+  .container{max-width:700px;margin:40px auto;background-color:#fff8dc;padding:30px;border-radius:15px;box-shadow:0 4px 10px rgba(0,0,0,0.2);position:relative;}
+  input[type=text]{width:100%;padding:12px;font-size:1em;border:2px solid #8b0000;border-radius:8px;margin-bottom:10px;}
+  button{background-color:#8b0000;color:gold;border:none;padding:12px 25px;font-size:1em;cursor:pointer;border-radius:8px;transition:0.3s;}
+  button:hover{background-color:gold;color:#8b0000;}
+  .card{border:2px solid #8b0000;border-radius:10px;padding:10px;margin:5px;display:inline-block;background-color:#fff;cursor:pointer;transition:transform 0.2s;}
+  .card:hover{transform:scale(1.05);box-shadow:0 4px 8px rgba(0,0,0,0.3);}
+  #studentInfo{margin-top:20px;}
+  #autocompleteList{border:1px solid #8b0000;background:#fff;max-height:150px;overflow-y:auto;margin-top:-5px;border-radius:5px;}
+  #autocompleteList div{padding:8px;cursor:pointer;}
+  #autocompleteList div:hover{background-color:gold;color:#8b0000;}
+  .error{color:red;margin-top:10px;font-weight:bold;}
+  .success{color:green;margin-top:10px;font-weight:bold;}
+  .qtyInput{width:50px;margin-left:10px;}
+</style>
+<body>
+<header>
+  <h1>iTeach PDU</h1>
+  <p>"This is SPARTA"</p>
+</header>
+<div class="container">
+  <h2>  Welcome to Unit 1 PCoin Auction </h2>
+  <input id="studentName" placeholder="Enter student name" oninput="autocompleteStudent()" autocomplete="off"/>
+  <div id="autocompleteList"></div>
+  <div id="studentInfo" style="display:none;">
+    <h3 id="studentDetails" data-coins="0"></h3>
+    <div id="prizeList">
+      <h4> Prizes</h4>
+      {% for prize, cost in prizes.items() %}
+        <div class="card">
+          {{ prize }} ({{ cost }} PCoins)
+          <input type="number" min="0" value="0" class="prizeQty qtyInput" data-prize="{{ prize }}" data-cost="{{ cost }}" />
+        </div>
+      {% endfor %}
+    </div>
+    <br/>
+    <button onclick="redeemPrizes()">Redeem</button>
+  </div>
+  <p id="message"></p>
+</div>
+<script>
+let currentStudent = "";
+function showMsg(text, cls=""){const el=document.getElementById("message");el.className=cls;el.textContent=text;}
+function autocompleteStudent(){
+  const input=document.getElementById("studentName").value.trim();
+  const listDiv=document.getElementById("autocompleteList");
+  listDiv.innerHTML="";
+  if(!input) return;
+  fetch("/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:input})})
+  .then(r=>r.json())
+  .then(data=>{if(data.matches){data.matches.forEach(name=>{const div=document.createElement("div");div.textContent=name;div.onclick=()=>selectStudent(name);listDiv.appendChild(div);});} else if(data.name){selectStudent(data.name);}});
+}
+function selectStudent(name){currentStudent=name;document.getElementById("studentName").value=name;document.getElementById("autocompleteList").innerHTML="";fetchStudentDetails(name);}
+function fetchStudentDetails(name){
+  fetch("/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name})})
+  .then(r=>r.json())
+  .then(data=>{if(!data.error&&data.name){document.getElementById("studentDetails").innerText=`${data.name} — ${data.coins} PCoins`;document.getElementById("studentDetails").dataset.coins=data.coins;document.getElementById("studentInfo").style.display="block";}});
+}
+function redeemPrizes(){
+  if(!currentStudent){showMsg("Search student first","error");return;}
+  let prizes={}; let totalCost=0;
+  document.querySelectorAll(".prizeQty").forEach(input=>{const qty=parseInt(input.value)||0;if(qty>0){const prize=input.dataset.prize;const cost=parseInt(input.dataset.cost);prizes[prize]=qty;totalCost+=qty*cost;}});
+  if(Object.keys(prizes).length===0){showMsg("Select at least one prize","error");return;}
+  const currentCoins=parseInt(document.getElementById("studentDetails").dataset.coins);
+  if(totalCost>currentCoins){showMsg(`Not enough coins! Total cost: ${totalCost}, Available: ${currentCoins}`,"error");return;}
+  fetch("/redeem",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:currentStudent,prizes:prizes})})
+  .then(r=>r.json())
+  .then(data=>{if(data.error) showMsg(data.error,"error");else{showMsg("Redeemed! Remaining coins: "+data.remaining,"success");document.getElementById("studentDetails").innerText=`${currentStudent} — ${data.remaining} PCoins`;document.getElementById("studentDetails").dataset.coins=data.remaining;document.querySelectorAll(".prizeQty").forEach(i=>i.value=0);}});
+}
+</script>
+</body>
+</html>
