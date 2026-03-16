@@ -9,10 +9,9 @@ STUDENTS_FILE = "students.xlsx"
 REDEMPTIONS_FILE = "redemptions.xlsx"
 
 PRIZES = {
-    "Field Visit": 100,
-    "Novel": 70,
-    "Food from teacher": 40,
-    "Free PE": 50,
+    "Field Visit": 75,
+    "Novel": 50,
+    "PDUkar's Badge": 25,
     "Bookmark": 10
 }
 
@@ -112,5 +111,5 @@ def download_redemptions():
         return f"Error downloading file: {e}"
 
 if __name__ == "__main__":
-    #app.run(debug=True)
+    app.run(debug=True)
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
